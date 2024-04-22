@@ -6,6 +6,12 @@ plugins {
 version='1.0.1-SNAPSHOT'
 group='com.simsilica'
 
+// Configuration to produce maven-repo style -sources and -javadoc jars
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
@@ -28,39 +34,28 @@ dependencies {
     runtimeOnly files("assets")        
 }
 
-
-// Configuration to produce maven-repo style -sources and -javadoc jars
-task sourcesJar(type: Jar) {
-    archiveClassifier = 'sources'
-    from sourceSets.main.allSource
-    exclude '**/.backups' 
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    archiveClassifier = 'javadoc'
-    from javadoc.destinationDir
-}
- 
 task assetsJar(type: Jar) {
     archiveClassifier = 'assets'
     from file('assets')
     exclude '**/*.psd' 
     exclude '**/.backups' 
 }
- 
+
 artifacts {
-    archives sourcesJar
-    archives javadocJar
-    archives assetsJar
+    assetsJar
 }
 
-// Publishing does not work for me without this stanza, and I don'y know why 
-// not, which is not satisfactory. But it does work with.
+// Publishing does not work for me without this stanza, and I don't know why 
+// not, which is not satisfactory. Even with it, publishing assets does not
+// work. The assets jar is built but is not copied to local maven. Copying
+// the file manually to local maven does then make it available to consumers,
+// but this is not good enough.
 publishing {
     publications {
         customLibrary(MavenPublication) {
             from components.java
         }
+        //artifact assetsJar
     }
 
     repositories {
