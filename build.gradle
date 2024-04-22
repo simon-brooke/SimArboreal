@@ -1,47 +1,48 @@
-apply plugin: 'java'
-apply plugin: 'maven'
+plugins {
+	id 'java-library'
+	id 'maven-publish'
+}
 
 version='1.0.1-SNAPSHOT'
 group='com.simsilica'
 
 repositories {
     mavenLocal()
-    jcenter()
-    
-    // Temporary until JME jars are in jcenter()   
-    maven { url "http://dl.bintray.com/jmonkeyengine/org.jmonkeyengine" }
+    mavenCentral()
+	// jcenter() is deprecated since Gradle 6.7 and will be removed in Gradle 9.0.
+	// see https://docs.gradle.org/8.7/userguide/upgrading_version_6.html#jcenter_deprecation
 }
 
 // Make sure the build file declares what it actually imports
-configurations.compile {
+configurations.implementation {
     transitive = false
 }
 
 // In this section you declare the dependencies for your production and test code
 dependencies {
 
-    compile "org.jmonkeyengine:jme3-core:3.1.+" 
-    //compile "com.jme3:jme3-core:unknown" 
-    compile 'org.slf4j:slf4j-api:1.7.13'
+    implementation "org.jmonkeyengine:jme3-core:3.6.1-stable" 
+    //implementation "com.jme3:jme3-core:unknown" 
+    implementation 'org.slf4j:slf4j-api:1.7.13'
 
-    runtime files("assets")        
+    runtimeOnly files("assets")        
 }
 
 
 // Configuration to produce maven-repo style -sources and -javadoc jars
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
     exclude '**/.backups' 
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
 }
  
 task assetsJar(type: Jar) {
-    classifier = 'assets'
+    archiveClassifier = 'assets'
     from file('assets')
     exclude '**/*.psd' 
     exclude '**/.backups' 
@@ -51,6 +52,20 @@ artifacts {
     archives sourcesJar
     archives javadocJar
     archives assetsJar
+}
+
+// Publishing does not work for me without this stanza, and I don'y know why 
+// not, which is not satisfactory. But it does work with.
+publishing {
+    publications {
+        customLibrary(MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        mavenLocal()
+    }
 }
 
 
